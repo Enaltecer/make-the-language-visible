@@ -149,6 +149,17 @@ th{background:#f7f9fc}
     <label>Exemplar response</label>
     <textarea id="exemplar">If the rabbit population decreases, foxes may have less food. As a result, the fox population may also decrease because fewer rabbits are available as prey.</textarea>
 
+    <div class="grid" style="margin-top:12px">
+      <div>
+        <button class="gold" onclick="generateExemplar()">✨ Create an Exemplar Response</button>
+      </div>
+      <div class="small" style="display:flex;align-items:center">
+        The prototype creates a draft from the task, subject, grade band, function, and communication mode. The teacher should revise it for lesson accuracy.
+      </div>
+    </div>
+
+    <div id="exemplarNotice" class="good hidden" style="margin-top:12px"></div>
+
     <div class="coach">
       <b>Planning principle:</b> The app looks for language in the response students are expected to produce. It does not decide what must be taught.
     </div>
@@ -394,6 +405,142 @@ function go(n){
 
 function escapeHtml(str){
   return str.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
+}
+
+
+function generateExemplar(){
+  const task = document.getElementById("task").value.trim().replace(/[.]+$/,"");
+  const subject = document.getElementById("subject").value;
+  const grade = document.getElementById("grade").value;
+  const domain = document.getElementById("domain").value;
+
+  if(!task){
+    alert("Enter a content objective or lesson task first.");
+    return;
+  }
+
+  const topic = cleanTaskForExemplar(task);
+  const exemplar = buildExemplarDraft(selectedFunction, subject, grade, topic, domain);
+  document.getElementById("exemplar").value = exemplar;
+
+  const notice = document.getElementById("exemplarNotice");
+  notice.classList.remove("hidden");
+  notice.innerHTML = `<b>Draft created.</b> Review the content accuracy, vocabulary, and level of detail before using it as the model response.`;
+}
+
+function cleanTaskForExemplar(task){
+  return task
+    .replace(/^(students will|the student will|students should be able to)\s+/i,"")
+    .replace(/^(identify|define|describe|classify|sequence|retell|narrate|summarize|compare|contrast|explain|predict|infer|interpret|analyze|justify|evaluate|argue|persuade)\s+/i,"")
+    .trim();
+}
+
+function buildExemplarDraft(fn, subject, grade, topic, domain){
+  const simple = grade === "K–2";
+  const upper = grade === "9–12";
+
+  const stems = {
+    "Identify": simple
+      ? `This is ${topic}.`
+      : `The key example is ${topic}.`,
+    "Define": simple
+      ? `${capitalize(topic)} is a term that names an important idea in this lesson.`
+      : `${capitalize(topic)} refers to the central concept described in the lesson and can be identified by its defining characteristics.`,
+    "Describe": simple
+      ? `${capitalize(topic)} has important parts and features that help us understand it.`
+      : `${capitalize(topic)} can be described through its most important characteristics, including its structure, behavior, and role in the larger context.`,
+    "Classify": simple
+      ? `${capitalize(topic)} belongs in this group because it shares the group's important features.`
+      : `${capitalize(topic)} belongs in this category because it demonstrates the defining characteristics used to organize the examples.`,
+    "Sequence": simple
+      ? `First, ${topic} begins. Next, the important steps happen in order. Finally, the process is complete.`
+      : `First, ${topic} begins with the initial condition. Next, the major steps occur in sequence. Finally, the process reaches its outcome.`,
+    "Retell / Narrate": simple
+      ? `First, ${topic} happened. Then, another important event occurred. Finally, the events reached an ending.`
+      : `At the beginning, ${topic} establishes the situation. As events develop, the main actions lead to a significant outcome. In the end, the sequence shows how the events are connected.`,
+    "Summarize": simple
+      ? `The main idea is ${topic}. The most important details explain what happened and why it matters.`
+      : `The central idea is ${topic}. The key details explain the most important information while leaving out less essential details.`,
+    "Compare": simple
+      ? `Both examples are connected to ${topic}, but they are not exactly the same.`
+      : `Both examples relate to ${topic}; however, they differ in important characteristics, purposes, or outcomes.`,
+    "Contrast": simple
+      ? `The examples are different because one has features that the other does not have.`
+      : `The examples differ in important ways. Whereas one demonstrates one set of characteristics, the other shows a contrasting pattern or outcome.`,
+    "Explain": simple
+      ? `${capitalize(topic)} works in a clear way. First, an important event happens, and then it leads to the result.`
+      : `${capitalize(topic)} can be explained by describing the key relationship, process, or reasoning that connects the important ideas.`,
+    "Explain Cause & Effect": simple
+      ? `${capitalize(topic)} happens because one event causes another. As a result, the final outcome changes.`
+      : `${capitalize(topic)} occurs because one condition influences another. As a result, the related system, event, or outcome changes.`,
+    "Predict": simple
+      ? `I predict that ${topic} will happen because the pattern gives us a clue.`
+      : `Based on the available evidence or pattern, ${topic} is likely to occur because the current conditions support that outcome.`,
+    "Infer": simple
+      ? `I infer that ${topic} because the clues show something that is not directly stated.`
+      : `The evidence suggests that ${topic}. This inference is supported by details that point to an unstated meaning.`,
+    "Interpret": simple
+      ? `${capitalize(topic)} means that the information is showing an important idea.`
+      : `${capitalize(topic)} is significant because the details, data, or language choices communicate a deeper meaning.`,
+    "Analyze": simple
+      ? `${capitalize(topic)} has important parts. Looking at each part helps explain how the whole idea works.`
+      : `An analysis of ${topic} shows how the individual parts, patterns, or choices work together to create the overall meaning or outcome.`,
+    "Draw Conclusions": simple
+      ? `I conclude that ${topic} because the evidence points to that answer.`
+      : `The evidence supports the conclusion that ${topic}. The available details and relationships provide a clear basis for this finding.`,
+    "Express and Support an Opinion": simple
+      ? `I think ${topic} because there is a good reason for my opinion.`
+      : `In my opinion, ${topic}. This position is supported by relevant reasons and examples.`,
+    "Justify": simple
+      ? `${capitalize(topic)} is the best answer because the evidence supports it.`
+      : `${capitalize(topic)} is justified because the evidence and reasoning clearly support the choice, method, or conclusion.`,
+    "Evaluate": simple
+      ? `${capitalize(topic)} is effective because it meets the important criteria.`
+      : `${capitalize(topic)} can be evaluated as effective or ineffective by applying clear criteria and examining the supporting evidence.`,
+    "Argue / Persuade": simple
+      ? `I believe ${topic}. My reason is that the evidence supports this position.`
+      : `The strongest position is that ${topic}. Evidence and reasoning support this claim, while alternative viewpoints are less convincing.`,
+    "Generalize": simple
+      ? `In general, ${topic} shows a pattern that happens in many examples.`
+      : `Generally, ${topic} demonstrates a broader pattern that can be applied across multiple examples or contexts.`,
+    "Ask Informational Questions": simple
+      ? `What is ${topic}? Where does it happen, and why is it important?`
+      : `What information is needed to understand ${topic}, and how can specific questions clarify the most important details?`,
+    "Ask Clarifying Questions": simple
+      ? `Can you explain ${topic} again? Can you show me an example?`
+      : `Could you clarify what ${topic} means in this context and provide an example that makes the relationship more explicit?`
+  };
+
+  let response = stems[fn] || `${capitalize(topic)} is the focus of this lesson. A strong response should explain the key idea using precise language and relevant details.`;
+
+  if(subject === "Mathematics"){
+    response = response
+      .replace(/evidence/gi,"mathematical evidence")
+      .replace(/examples or contexts/gi,"problems or representations")
+      .replace(/system, event, or outcome/gi,"quantity, pattern, or solution");
+  } else if(subject === "Science"){
+    response = response
+      .replace(/system, event, or outcome/gi,"scientific system, process, or outcome")
+      .replace(/important characteristics/gi,"observable scientific characteristics");
+  } else if(subject === "Social Studies"){
+    response = response
+      .replace(/system, event, or outcome/gi,"historical or civic outcome")
+      .replace(/evidence/gi,"historical evidence");
+  } else if(subject === "ELA"){
+    response = response
+      .replace(/evidence/gi,"text evidence")
+      .replace(/details, data, or language choices/gi,"details, text evidence, or language choices");
+  }
+
+  if(upper){
+    response = response.replace(/important/g,"significant");
+  }
+
+  return response;
+}
+
+function capitalize(text){
+  return text.charAt(0).toUpperCase()+text.slice(1);
 }
 
 function analyzeExemplar(){
