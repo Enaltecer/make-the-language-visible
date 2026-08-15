@@ -1,0 +1,1491 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Make the Language Visible — Functional Prototype</title>
+<style>
+:root{
+  --navy:#183b63; --berry:#9b2450; --gold:#d6a72c; --green:#3d8058;
+  --bg:#f4f6fa; --line:#d9dfe8; --ink:#23303f; --muted:#667085;
+  --softblue:#eef4fb; --softgreen:#eef8f2; --softgold:#fff8e6; --softberry:#f9edf2;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--navy);color:white;padding:22px 28px}
+header h1{margin:0;font-size:30px}
+header p{margin:6px 0 0;opacity:.92}
+.wrap{max-width:1180px;margin:24px auto;padding:0 20px 80px}
+.prototype-note{background:#fff3cd;border:1px solid #ebd58a;border-radius:10px;padding:12px 14px;margin-bottom:18px}
+.step{background:white;border-radius:16px;padding:22px;margin-bottom:22px;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+h2{margin-top:0;color:var(--navy)}
+h3{margin-top:0}
+label{display:block;font-weight:700;margin:14px 0 7px}
+input[type=text], textarea, select{
+  width:100%;padding:12px 13px;border:1px solid #bcc6d4;border-radius:10px;
+  font:inherit;background:white
+}
+textarea{min-height:110px;resize:vertical}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.panel{border:1px solid var(--line);border-radius:12px;padding:16px;background:#fcfdff}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid #b9c3d1;background:white;border-radius:999px;padding:9px 13px;font-weight:700;cursor:pointer}
+.chip.selected{background:var(--berry);color:white;border-color:var(--berry)}
+button{border:0;border-radius:9px;padding:11px 16px;font:inherit;font-weight:700;cursor:pointer}
+.primary{background:var(--navy);color:white}
+.secondary{background:#e9edf4;color:#233}
+.gold{background:var(--gold);color:#222}
+.green{background:var(--green);color:white}
+.actions{display:flex;justify-content:space-between;gap:12px;margin-top:22px}
+.hidden{display:none}
+.good{background:var(--softgreen);border-left:5px solid var(--green);padding:14px;border-radius:8px}
+.warn{background:var(--softgold);border-left:5px solid var(--gold);padding:14px;border-radius:8px}
+.coach{background:var(--softblue);border-left:5px solid var(--navy);padding:14px;border-radius:8px}
+.small{font-size:13px;color:var(--muted)}
+.exemplar-output{font-size:19px;line-height:1.8}
+.clickable{cursor:pointer;padding:2px 4px;border-radius:4px}
+.clickable:hover{outline:2px solid rgba(24,59,99,.25)}
+.hl-cause{background:#fff3ad}.hl-vocab{background:#dff5e5}.hl-modal{background:#e4e6ff}
+.hl-compare{background:#f7dbe7}.hl-sequence{background:#dfefff}.hl-evidence{background:#f3e5ff}
+.hl-opinion{background:#ffe7dc}.hl-definition{background:#e6f7f4}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.tag{display:inline-block;padding:5px 9px;border-radius:20px;color:#fff;font-size:12px}
+.tag-cause{background:#efb51f;color:#222}.tag-vocab{background:var(--green)}.tag-modal{background:#6c6ee8}
+.tag-compare{background:#b33d72}.tag-sequence{background:#3973b7}.tag-evidence{background:#7a4ca6}
+.tag-opinion{background:#cc6e3d}.tag-definition{background:#358b7d}
+.target-list{display:grid;gap:10px;margin-top:14px}
+.target{border:1px solid var(--line);border-radius:11px;padding:13px;background:#fbfcfe}
+.target-row{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
+.target input{margin-top:4px}
+.target strong{display:block;margin-bottom:4px}
+.levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.level-card{border:1px solid var(--line);border-radius:12px;padding:14px;background:white}
+.result{background:var(--softgreen);border:1px solid #b8d5c2;border-radius:12px;padding:18px;font-size:18px;line-height:1.5}
+.teach-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.teach-card{border:1px solid var(--line);border-radius:12px;padding:15px;background:white}
+.teach-card h4{margin:0 0 8px;color:var(--berry)}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #e7ebf1;text-align:left;vertical-align:top}
+th{background:#f7f9fc}
+.drawer-backdrop{position:fixed;inset:0;background:rgba(20,30,45,.36);opacity:0;pointer-events:none;transition:.2s;z-index:9}
+.drawer{position:fixed;left:0;right:0;bottom:-88vh;z-index:10;background:white;border-radius:20px 20px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.22);max-height:84vh;overflow:auto;transition:.28s ease;padding-bottom:26px}
+.drawer.open{bottom:0}.drawer-backdrop.open{opacity:1;pointer-events:auto}
+.drawer-handle{width:56px;height:5px;background:#cfd6df;border-radius:8px;margin:10px auto 6px}
+.drawer-header{padding:8px 24px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:18px;align-items:flex-start}
+.drawer-body{padding:20px 24px}
+.drawer-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.info-card{border:1px solid var(--line);border-radius:12px;padding:15px;background:#fbfcfe}
+.info-card h4{margin:0 0 8px;color:var(--berry)}
+.progress{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:18px}
+.progress div{padding:9px;text-align:center;border-radius:8px;background:#e6ebf2;color:#617082;font-size:12px;font-weight:700}
+.progress .active{background:var(--berry);color:white}
+@media(max-width:760px){
+  .grid,.teach-grid,.drawer-grid{grid-template-columns:1fr}
+  .progress{grid-template-columns:1fr 1fr}
+}
+
+.lesson-plan-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.lesson-block{border:1px solid var(--line);border-radius:12px;padding:15px;background:#fff}
+.lesson-block h4{margin:0 0 8px;color:var(--navy)}
+.time-badge{display:inline-block;background:var(--softblue);color:var(--navy);font-weight:700;border-radius:999px;padding:4px 9px;font-size:12px;margin-bottom:8px}
+.integration-note{background:var(--softberry);border-left:5px solid var(--berry);padding:14px;border-radius:8px;margin-top:18px}
+@media(max-width:760px){.lesson-plan-grid{grid-template-columns:1fr}}
+
+.planning-choice{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+.choice-card{border:2px solid var(--line);border-radius:14px;padding:16px;background:#fff;cursor:pointer}
+.choice-card.selected{border-color:var(--berry);background:var(--softberry)}
+.choice-card h4{margin:0 0 6px;color:var(--navy)}
+.full-lesson-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.full-lesson-block{border:1px solid var(--line);border-radius:12px;padding:15px;background:#fff}
+.full-lesson-block h4{margin:0 0 8px;color:var(--berry)}
+.phase-badge{display:inline-block;background:var(--softblue);color:var(--navy);font-weight:700;border-radius:999px;padding:4px 9px;font-size:12px;margin-bottom:8px}
+.lesson-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.meta-card{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:10px}
+@media(max-width:760px){.planning-choice,.full-lesson-grid,.lesson-meta{grid-template-columns:1fr}}
+
+.friendly-language{margin-top:8px}
+.friendly-feature{border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;background:#fff}
+.friendly-feature b{color:var(--navy)}
+.feature-examples{margin-top:5px;font-size:14px}
+.tech-term{margin-top:7px;font-size:12px;color:#667085}
+.tech-term summary{cursor:pointer;font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <h1>Make the Language Visible</h1>
+  <p>Functional early prototype for teacher feedback</p>
+</header>
+
+<div class="wrap">
+  <div class="prototype-note">
+    <b>Early Prototype — Feedback Only.</b> Do not enter student names or confidential information.
+  </div>
+
+  <div class="progress">
+    <div id="p1" class="active">1. Lesson</div>
+    <div id="p2">2. Exemplar</div>
+    <div id="p3">3. Make It Visible</div>
+    <div id="p4">4. Prioritize + Differentiate</div>
+    <div id="p5">5. Tomorrow's Lesson</div>
+  </div>
+
+  <section class="step" id="s1">
+    <h2>1. Start with today's lesson</h2>
+    <div class="grid">
+      <div>
+        <label>Grade band</label>
+        <select id="grade">
+          <option>K–2</option><option>3–5</option><option selected>6–8</option><option>9–12</option>
+        </select>
+      </div>
+      <div>
+        <label>Subject</label>
+        <select id="subject">
+          <option>ELA</option><option>Mathematics</option><option selected>Science</option>
+          <option>Social Studies</option><option>CTE</option><option>Other</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Content objective</label>
+    <textarea id="task" placeholder="What are students learning or understanding?">Explain how changes in one population affect an ecosystem.</textarea>
+
+    <label>Student task</label>
+    <textarea id="studentTask" placeholder="What will students actually do, say, write, solve, compare, discuss, create, or explain during the lesson?">Study an ecosystem model and explain to a partner how a decrease in one population could affect another population.</textarea>
+    <div class="small">This helps the app identify the language students actually need to produce—not just the language implied by the content objective.</div>
+
+    <label>Content standard <span class="small">(optional)</span></label>
+    <textarea id="standard" placeholder="Paste the standard if you have it. The app will use it to keep the language objective anchored to the intended content and task."></textarea>
+
+    <div class="two">
+      <div>
+        <label>Grade band</label>
+        <select id="gradeBand">
+          <option>K–2</option>
+          <option>3–5</option>
+          <option selected>6–8</option>
+          <option>9–12</option>
+        </select>
+      </div>
+      <div>
+        <label>Primary communication mode</label>
+        <select id="communicationMode">
+          <option value="speaking">Speaking</option>
+          <option value="writing" selected>Writing</option>
+        </select>
+      </div>
+    </div>
+
+    <label>What will students do with language?</label>
+    <div class="chips" id="functionChips"></div>
+
+    <div class="actions">
+      <span></span>
+      <button class="primary" onclick="go(2)">Continue</button>
+    </div>
+  </section>
+
+  <section class="step hidden" id="s2">
+    <h2>2. Picture the exemplar response</h2>
+    <p class="small">What would a successful student say or write?</p>
+
+    <label>Communication mode</label>
+    <select id="domain">
+      <option value="orally">Speaking</option>
+      <option value="in writing">Writing</option>
+      <option value="orally and in writing">Speaking and writing</option>
+    </select>
+
+    <label>Exemplar response length</label>
+    <select id="exemplarLength">
+      <option value="short">Short — 1–2 sentences</option>
+      <option value="medium" selected>Medium — 3–4 sentences</option>
+      <option value="extended">Extended — 5–7 sentences / short paragraph</option>
+    </select>
+
+    <label>Exemplar response</label>
+    <textarea id="exemplar">If the rabbit population decreases, foxes may have less food. As a result, the fox population may also decrease because fewer rabbits are available as prey.</textarea>
+
+    <div class="grid" style="margin-top:12px">
+      <div>
+        <button class="gold" onclick="generateExemplar()">✨ Create an Exemplar Response</button>
+      </div>
+      <div class="small" style="display:flex;align-items:center">
+        The prototype creates a draft from the task, subject, grade band, function, communication mode, and selected response length. The teacher should revise it for lesson accuracy.
+      </div>
+    </div>
+
+    <div id="exemplarNotice" class="good hidden" style="margin-top:12px"></div>
+
+    <div class="coach">
+      <b>Planning principle:</b> The app looks for language in the response students are expected to produce. It does not decide what must be taught.
+    </div>
+
+    <div class="actions">
+      <button class="secondary" onclick="go(1)">Back</button>
+      <button class="gold" onclick="analyzeExemplar()">Make the Language Visible</button>
+    </div>
+  </section>
+
+  <section class="step hidden" id="s3">
+    <h2>3. 👀 Make the language visible</h2>
+    <div class="grid">
+      <div class="panel">
+        <h3>Highlighted exemplar</h3>
+        <div id="highlightedExemplar" class="exemplar-output"></div>
+        <div id="legend" class="legend"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Language identified</h3>
+        <div id="detectedTable"></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="secondary" onclick="go(2)">Back</button>
+      <button class="green" onclick="prepareTargets()">Prioritize the Language</button>
+    </div>
+  </section>
+
+  <section class="step hidden" id="s4">
+    <h2>4. Prioritize the language</h2>
+    <div id="recommendationBox" class="good"></div>
+
+    <div class="coach" style="margin-top:14px">
+      <b>Teacher decision:</b> Select the one to three language targets you plan to explicitly teach. Add or remove anything based on your lesson and students.
+    </div>
+
+    <div id="targetList" class="target-list"></div>
+
+    <div class="grid" style="margin-top:18px">
+      <div>
+        <label>Add your own instructional target</label>
+        <input id="customTarget" type="text" placeholder="Example: comparative noun phrases">
+      </div>
+      <div style="display:flex;align-items:end">
+        <button class="secondary" onclick="addCustomTarget()">Add Target</button>
+      </div>
+    </div>
+
+    <h3 style="margin-top:24px">Select student English proficiency levels</h3>
+    <div class="chips" id="levelChips"></div>
+
+    <div class="integration-note">
+      <b>How are you planning today?</b>
+      <div class="planning-choice">
+        <div class="choice-card selected" id="choiceEnhance" onclick="selectPlanningMode('enhance')">
+          <h4>Enhance My Existing Lesson</h4>
+          <div class="small">Keep your HQIM or district lesson and see where to layer in explicit language teaching, oral rehearsal, and formative checks.</div>
+        </div>
+        <div class="choice-card" id="choiceBuild" onclick="selectPlanningMode('build')">
+          <h4>Build a Full Lesson</h4>
+          <div class="small">Create a complete lesson structure around the content objective, language function, instructional targets, and proficiency levels.</div>
+        </div>
+      </div>
+      <input type="hidden" id="planningMode" value="enhance">
+    </div>
+
+    <div class="actions">
+      <button class="secondary" onclick="go(3)">Back</button>
+      <button class="primary" onclick="buildPlan()">Build Tomorrow's Lesson</button>
+    </div>
+  </section>
+
+  <section class="step hidden" id="s5">
+    <h2>5. Tomorrow's Lesson</h2>
+
+
+    <h3>Make the Language Visible</h3>
+    <div class="teach-grid">
+      <div class="result">
+        <b>Academic demand</b>
+        <div id="academicDemand" style="margin-top:6px"></div>
+      </div>
+      <div class="result">
+        <b>High-leverage linguistic demand</b>
+        <div id="linguisticDemand" style="margin-top:6px"></div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:24px">The Language Students Need</h3>
+    <div class="coach">
+      <b>Plain language first.</b> See what the language does and what it looks like in use. Open the technical term only if it is helpful.
+    </div>
+    <div id="friendlyLanguageFeatures" class="friendly-language"></div>
+
+    <h3 style="margin-top:24px">Language Objective</h3>
+    <div id="objective" class="result"></div>
+
+    <div id="standardConnection" class="coach hidden" style="margin-top:12px"></div>
+
+    <h3 style="margin-top:24px">Differentiated Language Objectives</h3>
+    <div class="coach">
+      <b>Same content goal and language purpose. The forms and features become increasingly sophisticated across proficiency levels.</b>
+      <div class="small" style="margin-top:5px">These objectives name what students will do with language and the forms/features expected in the response. Scaffolds remain separate.</div>
+    </div>
+    <div id="differentiatedObjectives" class="levels" style="margin-top:14px"></div>
+
+    <div class="teach-grid" style="margin-top:18px">
+      <div class="teach-card">
+        <h4>Explicit Teaching</h4>
+        <div id="explicitTeach"></div>
+      </div>
+      <div class="teach-card">
+        <h4>Model</h4>
+        <div id="modelPlan"></div>
+      </div>
+      <div class="teach-card">
+        <h4>Structured Practice</h4>
+        <div id="practicePlan"></div>
+      </div>
+      <div class="teach-card">
+        <h4>Formative Look-Fors</h4>
+        <div id="lookFors"></div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:24px">Differentiated supports</h3>
+    <div id="differentiation" class="levels"></div>
+
+    <div id="lessonPlanningSection" class="hidden">
+      <div id="enhanceLessonOutput" class="hidden">
+        <h3 style="margin-top:26px">Enhance My Existing Lesson</h3>
+        <div class="coach">
+          <b>Keep your existing lesson.</b> These suggestions show where to weave in the language work without rewriting the HQIM lesson.
+        </div>
+        <div id="lessonPlanningSuggestions" class="lesson-plan-grid" style="margin-top:14px"></div>
+      </div>
+
+      <div id="fullLessonOutput" class="hidden">
+        <h3 style="margin-top:26px">Build a Full Lesson</h3>
+        <div class="coach">
+          <b>Use this as a practical lesson skeleton.</b> Adjust the content, timing, texts, and tasks to match your curriculum and students.
+        </div>
+
+        <div class="lesson-meta">
+          <div class="meta-card"><b>Suggested Length</b><br><span id="lessonLength">45–60 minutes</span></div>
+          <div class="meta-card"><b>Primary Function</b><br><span id="lessonFunction"></span></div>
+          <div class="meta-card"><b>Language Targets</b><br><span id="lessonTargets"></span></div>
+        </div>
+
+        <div id="fullLessonPlan" class="full-lesson-grid"></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="secondary" onclick="go(4)">Back</button>
+      <button class="primary" onclick="copyObjective()">Copy Objective</button>
+    </div>
+  </section>
+</div>
+
+<div id="backdrop" class="drawer-backdrop" onclick="closeCard()"></div>
+<div id="drawer" class="drawer" aria-hidden="true">
+  <div class="drawer-handle"></div>
+  <div class="drawer-header">
+    <div>
+      <div id="drawerLabel" class="small">Instructional Language Target</div>
+      <h2 id="drawerTitle">Target</h2>
+      <div id="drawerEvidence" class="small"></div>
+    </div>
+    <button class="secondary" onclick="closeCard()">Close</button>
+  </div>
+  <div id="drawerBody" class="drawer-body"></div>
+</div>
+
+<script>
+const functions = [
+  "Identify","Define","Describe","Classify","Sequence","Retell / Narrate","Summarize",
+  "Compare","Contrast","Explain","Explain Cause & Effect","Predict","Infer","Interpret",
+  "Analyze","Draw Conclusions","Express and Support an Opinion","Justify","Evaluate",
+  "Argue / Persuade","Generalize","Ask Informational Questions","Ask Clarifying Questions"
+];
+
+const levels = ["Entering","Emerging","Developing","Expanding","Bridging"];
+let selectedFunction = "Explain Cause & Effect";
+let selectedLevels = ["Emerging","Developing"];
+let detections = [];
+let availableTargets = [];
+
+const functionDefaults = {
+  "Identify":["Precise nouns / labels","Identifying phrases"],
+  "Define":["Definition structures","Precise nouns / labels"],
+  "Describe":["Precise nouns and adjectives","Expanded noun phrases"],
+  "Classify":["Category membership phrases","Because clauses for placement"],
+  "Sequence":["Time-order transitions","Action verbs"],
+  "Retell / Narrate":["Temporal connectors","Past-tense verb forms"],
+  "Summarize":["Main-idea structures","Cohesive connectors"],
+  "Compare":["Comparison structures","Comparative adjectives"],
+  "Contrast":["Contrast connectors","Comparative adjectives"],
+  "Explain":["Logical connectors","Precise verbs"],
+  "Explain Cause & Effect":["Cause-and-effect connectors","Precise content vocabulary"],
+  "Predict":["Modal verbs","Evidence-to-prediction structures"],
+  "Infer":["Evidence + inference structures","Cautious claim language"],
+  "Interpret":["Meaning / significance structures","Evidence reference phrases"],
+  "Analyze":["Part-to-whole relationship language","Evidence and reasoning connectors"],
+  "Draw Conclusions":["Conclusion + evidence structures","Reasoning connectors"],
+  "Express and Support an Opinion":["Opinion / claim structures","Reason connectors"],
+  "Justify":["Claim-reason-evidence structures","Evidence citation phrases"],
+  "Evaluate":["Criteria-based judgment structures","Evaluative vocabulary"],
+  "Argue / Persuade":["Claim-evidence-reasoning organization","Counterclaim language"],
+  "Generalize":["Generalization structures","Qualifiers"],
+  "Ask Informational Questions":["Wh-question structures","Auxiliary verb patterns"],
+  "Ask Clarifying Questions":["Clarification questions","Polite request structures"]
+};
+
+const targetInfo = {
+  "Cause-and-effect connectors":{
+    examples:["because","so","as a result","therefore","consequently","leads to","results in","causes","affects"],
+    className:"hl-cause", tagClass:"tag-cause", label:"Cause & Effect",
+    why:"Shows why something happens and what happens as a result.",
+    teach:"Model two ideas separately, then combine them using one connector. Compare how because and as a result organize the relationship.",
+    errors:["Using because without completing the cause.","Reversing the cause and effect.","Stacking connectors that do not fit together."]
+  },
+  "Precise content vocabulary":{
+    examples:[], className:"hl-vocab", tagClass:"tag-vocab", label:"Content Vocabulary",
+    why:"Communicates the disciplinary idea accurately.",
+    teach:"Connect key words to visuals, examples, and the exemplar response. Practice the words inside the full explanation rather than in isolation.",
+    errors:["Defining words without using them to communicate meaning.","Using a related but imprecise term."]
+  },
+  "Modal verbs":{
+    examples:["may","might","could","will","would","should","must","can"],
+    className:"hl-modal", tagClass:"tag-modal", label:"Modal Language",
+    why:"Communicates possibility, likelihood, obligation, or certainty.",
+    teach:"Compare two versions of a claim using different modal verbs and discuss how the strength of the claim changes.",
+    errors:["Treating may and will as having the same degree of certainty."]
+  },
+  "Comparison structures":{
+    examples:["both","similarly","similar","same","different","unlike","whereas","however","in contrast","more than","less than","fewer","more","less"],
+    className:"hl-compare", tagClass:"tag-compare", label:"Comparison",
+    why:"Makes similarities or differences explicit.",
+    teach:"Place two examples side by side and orally rehearse one similarity or difference using the selected structure.",
+    errors:["Listing characteristics without actually comparing."]
+  },
+  "Time-order transitions":{
+    examples:["first","next","then","after","before","finally","initially","subsequently","last"],
+    className:"hl-sequence", tagClass:"tag-sequence", label:"Sequence",
+    why:"Organizes events, steps, or stages in order.",
+    teach:"Reorder steps or images, then orally rehearse the sequence before writing.",
+    errors:["Using transitions that do not match the order."]
+  },
+  "Evidence reference phrases":{
+    examples:["according to","the text shows","the data shows","the evidence shows","this suggests","this supports","for example"],
+    className:"hl-evidence", tagClass:"tag-evidence", label:"Evidence",
+    why:"Connects a claim, inference, or judgment to evidence.",
+    teach:"Color-code claim, evidence, and reasoning in a model response.",
+    errors:["Adding evidence without explaining how it supports the claim."]
+  },
+  "Opinion / claim structures":{
+    examples:["i think","in my opinion","i believe","i agree","i disagree","my claim is"],
+    className:"hl-opinion", tagClass:"tag-opinion", label:"Claim / Opinion",
+    why:"States a position or viewpoint.",
+    teach:"Model the difference between a claim and the reason that supports it.",
+    errors:["Giving a preference without support."]
+  },
+  "Definition structures":{
+    examples:["is a","is an","refers to","means","is defined as"],
+    className:"hl-definition", tagClass:"tag-definition", label:"Definition",
+    why:"States what a term or concept means.",
+    teach:"Model category + distinguishing feature rather than copying a dictionary sentence.",
+    errors:["Using a circular definition."]
+  }
+};
+
+function init(){
+  const fWrap = document.getElementById("functionChips");
+  functions.forEach(fn=>{
+    const b=document.createElement("button");
+    b.className="chip"+(fn===selectedFunction?" selected":"");
+    b.textContent=fn;
+    b.onclick=()=>{
+      document.querySelectorAll("#functionChips .chip").forEach(x=>x.classList.remove("selected"));
+      b.classList.add("selected");
+      selectedFunction=fn;
+    };
+    fWrap.appendChild(b);
+  });
+
+  const lWrap=document.getElementById("levelChips");
+  levels.forEach(lvl=>{
+    const b=document.createElement("button");
+    b.className="chip"+(selectedLevels.includes(lvl)?" selected":"");
+    b.textContent=lvl;
+    b.onclick=()=>{
+      b.classList.toggle("selected");
+      selectedLevels=[...document.querySelectorAll("#levelChips .chip.selected")].map(x=>x.textContent);
+    };
+    lWrap.appendChild(b);
+  });
+}
+init();
+
+function go(n){
+  for(let i=1;i<=5;i++){
+    document.getElementById("s"+i).classList.toggle("hidden",i!==n);
+    document.getElementById("p"+i).classList.toggle("active",i===n);
+  }
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function escapeHtml(str){
+  return str.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
+}
+
+
+function generateExemplar(){
+  const task = document.getElementById("task").value.trim().replace(/[.]+$/,"");
+  const subject = document.getElementById("subject").value;
+  const grade = document.getElementById("grade").value;
+  const domain = document.getElementById("domain").value;
+  const exemplarLength = document.getElementById("exemplarLength")?.value || "medium";
+
+  if(!task){
+    alert("Enter a content objective or lesson task first.");
+    return;
+  }
+
+  const topic = cleanTaskForExemplar(task);
+  const exemplar = buildExemplarDraft(selectedFunction, subject, grade, topic, domain, exemplarLength, studentTask);
+  document.getElementById("exemplar").value = exemplar;
+
+  const notice = document.getElementById("exemplarNotice");
+  notice.classList.remove("hidden");
+  notice.innerHTML = `<b>Draft created.</b> Review the content accuracy, vocabulary, and level of detail before using it as the model response.`;
+}
+
+function cleanTaskForExemplar(task){
+  return task
+    .replace(/^(students will|the student will|students should be able to)\s+/i,"")
+    .replace(/^(identify|define|describe|classify|sequence|retell|narrate|summarize|compare|contrast|explain|predict|infer|interpret|analyze|justify|evaluate|argue|persuade)\s+/i,"")
+    .trim();
+}
+
+function buildExemplarDraft(fn, subject, grade, topic, domain, exemplarLength, studentTask){
+  const simple = grade === "K–2";
+  const upper = grade === "9–12";
+
+  const stems = {
+    "Identify": simple
+      ? `This is ${topic}.`
+      : `The key example is ${topic}.`,
+    "Define": simple
+      ? `${capitalize(topic)} is a term that names an important idea in this lesson.`
+      : `${capitalize(topic)} refers to the central concept described in the lesson and can be identified by its defining characteristics.`,
+    "Describe": simple
+      ? `${capitalize(topic)} has important parts and features that help us understand it.`
+      : `${capitalize(topic)} can be described through its most important characteristics, including its structure, behavior, and role in the larger context.`,
+    "Classify": simple
+      ? `${capitalize(topic)} belongs in this group because it shares the group's important features.`
+      : `${capitalize(topic)} belongs in this category because it demonstrates the defining characteristics used to organize the examples.`,
+    "Sequence": simple
+      ? `First, ${topic} begins. Next, the important steps happen in order. Finally, the process is complete.`
+      : `First, ${topic} begins with the initial condition. Next, the major steps occur in sequence. Finally, the process reaches its outcome.`,
+    "Retell / Narrate": simple
+      ? `First, ${topic} happened. Then, another important event occurred. Finally, the events reached an ending.`
+      : `At the beginning, ${topic} establishes the situation. As events develop, the main actions lead to a significant outcome. In the end, the sequence shows how the events are connected.`,
+    "Summarize": simple
+      ? `The main idea is ${topic}. The most important details explain what happened and why it matters.`
+      : `The central idea is ${topic}. The key details explain the most important information while leaving out less essential details.`,
+    "Compare": simple
+      ? `Both examples are connected to ${topic}, but they are not exactly the same.`
+      : `Both examples relate to ${topic}; however, they differ in important characteristics, purposes, or outcomes.`,
+    "Contrast": simple
+      ? `The examples are different because one has features that the other does not have.`
+      : `The examples differ in important ways. Whereas one demonstrates one set of characteristics, the other shows a contrasting pattern or outcome.`,
+    "Explain": simple
+      ? `${capitalize(topic)} works in a clear way. First, an important event happens, and then it leads to the result.`
+      : `${capitalize(topic)} can be explained by describing the key relationship, process, or reasoning that connects the important ideas.`,
+    "Explain Cause & Effect": simple
+      ? `${capitalize(topic)} happens because one event causes another. As a result, the final outcome changes.`
+      : `${capitalize(topic)} occurs because one condition influences another. As a result, the related system, event, or outcome changes.`,
+    "Predict": simple
+      ? `I predict that ${topic} will happen because the pattern gives us a clue.`
+      : `Based on the available evidence or pattern, ${topic} is likely to occur because the current conditions support that outcome.`,
+    "Infer": simple
+      ? `I infer that ${topic} because the clues show something that is not directly stated.`
+      : `The evidence suggests that ${topic}. This inference is supported by details that point to an unstated meaning.`,
+    "Interpret": simple
+      ? `${capitalize(topic)} means that the information is showing an important idea.`
+      : `${capitalize(topic)} is significant because the details, data, or language choices communicate a deeper meaning.`,
+    "Analyze": simple
+      ? `${capitalize(topic)} has important parts. Looking at each part helps explain how the whole idea works.`
+      : `An analysis of ${topic} shows how the individual parts, patterns, or choices work together to create the overall meaning or outcome.`,
+    "Draw Conclusions": simple
+      ? `I conclude that ${topic} because the evidence points to that answer.`
+      : `The evidence supports the conclusion that ${topic}. The available details and relationships provide a clear basis for this finding.`,
+    "Express and Support an Opinion": simple
+      ? `I think ${topic} because there is a good reason for my opinion.`
+      : `In my opinion, ${topic}. This position is supported by relevant reasons and examples.`,
+    "Justify": simple
+      ? `${capitalize(topic)} is the best answer because the evidence supports it.`
+      : `${capitalize(topic)} is justified because the evidence and reasoning clearly support the choice, method, or conclusion.`,
+    "Evaluate": simple
+      ? `${capitalize(topic)} is effective because it meets the important criteria.`
+      : `${capitalize(topic)} can be evaluated as effective or ineffective by applying clear criteria and examining the supporting evidence.`,
+    "Argue / Persuade": simple
+      ? `I believe ${topic}. My reason is that the evidence supports this position.`
+      : `The strongest position is that ${topic}. Evidence and reasoning support this claim, while alternative viewpoints are less convincing.`,
+    "Generalize": simple
+      ? `In general, ${topic} shows a pattern that happens in many examples.`
+      : `Generally, ${topic} demonstrates a broader pattern that can be applied across multiple examples or contexts.`,
+    "Ask Informational Questions": simple
+      ? `What is ${topic}? Where does it happen, and why is it important?`
+      : `What information is needed to understand ${topic}, and how can specific questions clarify the most important details?`,
+    "Ask Clarifying Questions": simple
+      ? `Can you explain ${topic} again? Can you show me an example?`
+      : `Could you clarify what ${topic} means in this context and provide an example that makes the relationship more explicit?`
+  };
+
+  let response = stems[fn] || `${capitalize(topic)} is the focus of this lesson. A strong response should explain the key idea using precise language and relevant details.`;
+
+  if(subject === "Mathematics"){
+    response = response
+      .replace(/evidence/gi,"mathematical evidence")
+      .replace(/examples or contexts/gi,"problems or representations")
+      .replace(/system, event, or outcome/gi,"quantity, pattern, or solution");
+  } else if(subject === "Science"){
+    response = response
+      .replace(/system, event, or outcome/gi,"scientific system, process, or outcome")
+      .replace(/important characteristics/gi,"observable scientific characteristics");
+  } else if(subject === "Social Studies"){
+    response = response
+      .replace(/system, event, or outcome/gi,"historical or civic outcome")
+      .replace(/evidence/gi,"historical evidence");
+  } else if(subject === "ELA"){
+    response = response
+      .replace(/evidence/gi,"text evidence")
+      .replace(/details, data, or language choices/gi,"details, text evidence, or language choices");
+  }
+
+  if(upper){
+    response = response.replace(/important/g,"significant");
+  }
+
+  response = expandExemplarResponse(response, fn, subject, grade, topic, exemplarLength);
+
+  return response;
+}
+
+function expandExemplarResponse(base, fn, subject, grade, topic, exemplarLength){
+  if(exemplarLength === "short") return base;
+
+  const additions = {
+    "Explain Cause & Effect":[
+      `This relationship matters because changes in one part of the system can influence other parts.`,
+      `For example, when one condition changes, another population, event, quantity, or outcome may also change.`,
+      `As a result, the effects can continue across the larger system.`,
+      `The explanation is strongest when each effect is clearly connected to its cause.`
+    ],
+    "Explain":[
+      `A complete explanation should show how the important ideas are connected, not just list facts.`,
+      `One key detail helps clarify the relationship or process.`,
+      `Another detail adds precision and shows why the explanation makes sense.`,
+      `Together, these details make the reasoning clear.`
+    ],
+    "Sequence":[
+      `Each step leads to the next part of the process.`,
+      `The order matters because changing the sequence can change the outcome.`,
+      `After the middle steps are complete, the process moves toward its final stage.`,
+      `The sequence can be followed more easily when the transitions clearly signal order.`
+    ],
+    "Compare":[
+      `One similarity is especially important because it shows what the two examples share.`,
+      `At the same time, a key difference helps explain how the examples are not identical.`,
+      `Looking at both similarities and differences provides a more complete comparison.`,
+      `The comparison is strongest when the same criteria are used for both examples.`
+    ],
+    "Contrast":[
+      `A major difference is visible in the way the two examples function or develop.`,
+      `Another difference can be seen in their features, evidence, or outcomes.`,
+      `These contrasts help clarify why the two examples should not be treated as the same.`,
+      `Using parallel language makes the contrast easier to follow.`
+    ],
+    "Justify":[
+      `The justification should make the reasoning visible, not simply repeat the answer.`,
+      `A relevant piece of evidence supports the claim.`,
+      `The reasoning explains how that evidence connects to the claim.`,
+      `Together, the claim, evidence, and reasoning make the justification convincing.`
+    ],
+    "Analyze":[
+      `One part of the evidence reveals an important pattern or relationship.`,
+      `A second detail helps explain how that pattern develops or why it matters.`,
+      `The analysis connects the parts to the larger meaning or outcome.`,
+      `A strong analysis explains the relationship rather than only identifying the parts.`
+    ],
+    "Summarize":[
+      `The summary focuses on the central idea and the most essential supporting details.`,
+      `Less important information is omitted so the main meaning remains clear.`,
+      `The details are connected rather than listed separately.`,
+      `The final summary communicates the core message in a concise way.`
+    ],
+    "Retell / Narrate":[
+      `The events are connected so the listener or reader can follow what happened.`,
+      `The middle events show how the situation develops.`,
+      `The ending connects back to the most important events or outcome.`,
+      `Temporal language helps keep the retell organized.`
+    ],
+    "Predict":[
+      `The prediction is based on a pattern, clue, or piece of evidence.`,
+      `That evidence makes one outcome more likely than another.`,
+      `The prediction may change if the conditions or evidence change.`,
+      `Strong predictions explain the reasoning behind the expected outcome.`
+    ],
+    "Infer":[
+      `The inference is not stated directly, so it must be supported with clues from the text, data, or situation.`,
+      `One clue points toward this interpretation.`,
+      `Another clue strengthens the inference.`,
+      `Together, the evidence supports a reasonable conclusion.`
+    ],
+    "Evaluate":[
+      `The evaluation uses clear criteria rather than personal preference alone.`,
+      `Evidence shows how well the example meets those criteria.`,
+      `Another piece of evidence may reveal a limitation or strength.`,
+      `The final judgment is based on the criteria and evidence together.`
+    ],
+    "Argue / Persuade":[
+      `The position is supported with relevant evidence and reasoning.`,
+      `A strong argument also considers what another person might say.`,
+      `The response explains why the evidence supports this position more strongly.`,
+      `The conclusion reinforces the claim without simply repeating it.`
+    ],
+    "Define":[
+      `The definition identifies the category the concept belongs to.`,
+      `It also explains the features that make the concept distinct.`,
+      `An example can help clarify the meaning.`,
+      `A precise definition avoids using the word itself as the explanation.`
+    ],
+    "Describe":[
+      `The description includes precise details that help the reader or listener form a clear picture.`,
+      `The most relevant features are emphasized rather than every possible detail.`,
+      `Specific nouns, verbs, and modifiers make the description more exact.`,
+      `The details are organized so the description is easy to follow.`
+    ],
+    "Classify":[
+      `The classification is based on shared characteristics or criteria.`,
+      `One feature explains why the example belongs in the category.`,
+      `Another feature helps distinguish it from other categories.`,
+      `The reasoning makes the classification clear rather than simply naming the group.`
+    ]
+  };
+
+  let pool = additions[fn] || [
+    `A strong response should include enough detail to make the thinking visible.`,
+    `The response should connect the content idea to the language needed for the task.`,
+    `Relevant details should be organized so the meaning is clear.`,
+    `Precise language makes the response stronger and easier to understand.`
+  ];
+
+  // Subject-aware wording.
+  pool = pool.map(s => {
+    if(subject === "Mathematics"){
+      return s.replace(/text, data, or situation/g,"problem, representation, or data")
+              .replace(/reader or listener/g,"reader or listener");
+    }
+    if(subject === "Science"){
+      return s.replace(/text, data, or situation/g,"data, model, investigation, or scientific situation");
+    }
+    if(subject === "Social Studies"){
+      return s.replace(/text, data, or situation/g,"source, event, evidence, or historical situation");
+    }
+    if(subject === "ELA"){
+      return s.replace(/text, data, or situation/g,"text, quotation, detail, or literary situation");
+    }
+    return s;
+  });
+
+  const count = exemplarLength === "extended" ? 4 : 2;
+  return [base, ...pool.slice(0,count)].join(" ");
+}
+
+function capitalize(text){
+  return text.charAt(0).toUpperCase()+text.slice(1);
+}
+
+function analyzeExemplar(){
+  const text=document.getElementById("exemplar").value.trim();
+  if(!text){alert("Enter an exemplar response first.");return;}
+
+  detections=[];
+  Object.entries(targetInfo).forEach(([name,info])=>{
+    if(name==="Precise content vocabulary") return;
+    const hits=[];
+    info.examples.forEach(ex=>{
+      const re=new RegExp("\\b"+ex.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+"\\b","gi");
+      const found=text.match(re);
+      if(found) hits.push(...found);
+    });
+    if(hits.length) detections.push({name,hits:[...new Set(hits.map(x=>x.toLowerCase()))]});
+  });
+
+  const vocab = detectContentVocabulary(text);
+  if(vocab.length) detections.push({name:"Precise content vocabulary",hits:vocab});
+
+  renderHighlighted(text);
+  renderDetected();
+  go(3);
+}
+
+function detectContentVocabulary(text){
+  const stop = new Set(["the","a","an","and","or","but","if","then","because","as","a result","may","might","could","will",
+  "would","should","must","can","is","are","was","were","be","been","being","have","has","had","do","does","did","to","of","in",
+  "on","at","for","from","with","by","that","this","these","those","it","they","he","she","we","you","i","more","less","fewer",
+  "also","very","than","so","when","where","what","who","why","how"]);
+  const words=(text.toLowerCase().match(/\b[a-z][a-z-]{3,}\b/g)||[]);
+  const counts={};
+  words.forEach(w=>{if(!stop.has(w)) counts[w]=(counts[w]||0)+1});
+  return Object.keys(counts).sort((a,b)=>(counts[b]-counts[a]) || b.length-a.length).slice(0,6);
+}
+
+function renderHighlighted(text){
+  let html=escapeHtml(text);
+  const all=[];
+  detections.forEach(d=>{
+    const info=targetInfo[d.name];
+    d.hits.forEach(hit=>all.push({hit, name:d.name, len:hit.length, cls:info.className}));
+  });
+  all.sort((a,b)=>b.len-a.len);
+  all.forEach(item=>{
+    const re=new RegExp("\\b("+item.hit.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+")\\b","gi");
+    html=html.replace(re,`<span class="clickable ${item.cls}" onclick="openCard('${encodeURIComponent(item.name)}','${encodeURIComponent(item.hit)}')"><b>$1</b></span>`);
+  });
+  document.getElementById("highlightedExemplar").innerHTML=html;
+
+  const unique=[...new Set(detections.map(d=>d.name))];
+  document.getElementById("legend").innerHTML=unique.map(name=>{
+    const i=targetInfo[name];
+    return `<span class="tag ${i.tagClass}">${i.label}</span>`;
+  }).join("");
+}
+
+function renderDetected(){
+  if(!detections.length){
+    document.getElementById("detectedTable").innerHTML="<p>No listed features were detected. The teacher can still add an instructional target manually.</p>";
+    return;
+  }
+  document.getElementById("detectedTable").innerHTML=`
+    <table><tr><th>Language identified</th><th>Exact evidence</th></tr>
+    ${detections.map(d=>`<tr><td>${d.name}</td><td>${d.hits.map(x=>`“${x}”`).join(", ")}</td></tr>`).join("")}
+    </table>`;
+}
+
+function prepareTargets(){
+  const defaults=functionDefaults[selectedFunction]||[];
+  const detectedNames=detections.map(d=>d.name);
+
+  let suggested=[];
+  defaults.forEach(name=>{
+    if(targetInfo[name] || name==="Precise content vocabulary") suggested.push(name);
+  });
+  detectedNames.forEach(name=>{if(!suggested.includes(name)) suggested.push(name)});
+  suggested=[...new Set(suggested)].slice(0,6);
+
+  availableTargets=suggested.map(name=>{
+    const d=detections.find(x=>x.name===name);
+    return {
+      name,
+      evidence:d?d.hits:[],
+      recommended:isRecommended(name,defaults,detectedNames)
+    };
+  });
+
+  const recs=availableTargets.filter(x=>x.recommended).slice(0,3);
+  document.getElementById("recommendationBox").innerHTML=`
+    <b>Recommended instructional targets</b>
+    <ul>${recs.map(r=>`<li><b>${r.name}</b>${r.evidence.length?` — shown through ${r.evidence.map(x=>`“${x}”`).join(", ")}`:""}</li>`).join("")}</ul>
+    <div class="small">These are suggested because they align with the confirmed function and/or appear in the exemplar. The teacher makes the final decision.</div>`;
+
+  renderTargetList(recs.map(r=>r.name));
+  go(4);
+}
+
+function isRecommended(name,defaults,detectedNames){
+  if(name==="Precise content vocabulary") return detectedNames.includes(name);
+  if(defaults.includes(name) && detectedNames.includes(name)) return true;
+  if(defaults.includes(name) && ["Sequence","Compare","Contrast","Explain Cause & Effect","Justify","Define"].includes(selectedFunction)) return true;
+  return false;
+}
+
+function renderTargetList(selectedNames=[]){
+  const wrap=document.getElementById("targetList");
+  wrap.innerHTML=availableTargets.map((t,i)=>{
+    const checked=selectedNames.includes(t.name)?"checked":"";
+    const evidence=t.evidence.length?`Detected: ${t.evidence.map(x=>`“${x}”`).join(", ")}`:"Associated with the selected function.";
+    return `<div class="target"><div class="target-row">
+      <input type="checkbox" id="target${i}" value="${i}" ${checked}>
+      <div><strong>${t.name}${t.recommended?' ⭐':''}</strong>
+      <div>${evidence}</div>
+      <div class="small">${targetInfo[t.name]?.why||"Teacher-defined instructional target."}</div></div>
+    </div></div>`;
+  }).join("");
+}
+
+function addCustomTarget(){
+  const input=document.getElementById("customTarget");
+  const name=input.value.trim();
+  if(!name)return;
+  availableTargets.push({name,evidence:[],recommended:false});
+  input.value="";
+  renderTargetList([]);
+  document.getElementById("target"+(availableTargets.length-1)).checked=true;
+}
+
+function buildPlan(){
+  const checked=[...document.querySelectorAll("#targetList input:checked")];
+  if(!checked.length){alert("Select at least one instructional target.");return}
+  if(!selectedLevels.length){alert("Select at least one proficiency level.");return}
+
+  const selected=checked.map(x=>availableTargets[+x.value]);
+  const task=document.getElementById("task").value.trim().replace(/[.]+$/,"");
+  const domain=document.getElementById("domain").value;
+  const targetNames=selected.map(x=>x.name.toLowerCase());
+  const targetText=targetNames.length===1?targetNames[0]:targetNames.slice(0,-1).join(", ")+" and "+targetNames.at(-1);
+  const obj=`Students will ${domain} ${normalizeFunction(selectedFunction)} ${task.charAt(0).toLowerCase()+task.slice(1)} using ${targetText}.`;
+
+  document.getElementById("objective").textContent=obj;
+
+  const friendlyBox = document.getElementById("friendlyLanguageFeatures");
+  if(friendlyBox) friendlyBox.innerHTML = friendlyFeaturesForFunction(selectedFunction);
+
+  const demandAnalysis = buildDemandAnalysis(selectedFunction, selected, studentTask);
+  const academicDemandEl = document.getElementById("academicDemand");
+  const linguisticDemandEl = document.getElementById("linguisticDemand");
+  if(academicDemandEl) academicDemandEl.textContent = demandAnalysis.academic;
+  if(linguisticDemandEl) linguisticDemandEl.innerHTML = demandAnalysis.linguistic;
+
+  const standard = document.getElementById("standard").value.trim();
+  const standardBox = document.getElementById("standardConnection");
+  if(standard){
+    standardBox.classList.remove("hidden");
+    standardBox.innerHTML = `<b>Connection to the content standard</b><br><span class="small">${escapeHtml(standard)}</span><br><br>This language objective supports students in communicating the thinking required by the standard without changing the content expectation.`;
+  } else {
+    standardBox.classList.add("hidden");
+  }
+
+  document.getElementById("differentiatedObjectives").innerHTML =
+    selectedLevels.map(level=>buildDifferentiatedObjective(level, selectedFunction, task, domain, selected)).join("");
+
+  document.getElementById("explicitTeach").innerHTML="<ul>"+selected.map(t=>`<li><b>${t.name}:</b> ${targetInfo[t.name]?.teach||"Model the target explicitly within the exemplar response."}</li>`).join("")+"</ul>";
+  document.getElementById("modelPlan").innerHTML=`Use the exemplar as a model. Highlight the selected targets, think aloud about how they communicate meaning, and compare a less effective and more effective version.`;
+  document.getElementById("practicePlan").innerHTML=`Students rehearse orally with a partner before independent production. Partner feedback is tied to the selected language target rather than general correctness.`;
+  document.getElementById("lookFors").innerHTML="<ul>"+selected.map(t=>`<li>Uses <b>${t.name.toLowerCase()}</b> accurately and meaningfully.</li>`).join("")+`<li>Produces the expected amount of connected language for the selected proficiency level.</li></ul>`;
+
+  document.getElementById("differentiation").innerHTML=selectedLevels.map(l=>levelCard(l,selected)).join("");
+
+  const lessonSection = document.getElementById("lessonPlanningSection");
+  const mode = document.getElementById("planningMode")?.value || "enhance";
+  lessonSection.classList.remove("hidden");
+
+  if(mode === "enhance"){
+    document.getElementById("enhanceLessonOutput").classList.remove("hidden");
+    document.getElementById("fullLessonOutput").classList.add("hidden");
+    document.getElementById("lessonPlanningSuggestions").innerHTML = buildLessonIntegration(selected, selectedFunction);
+  } else {
+    document.getElementById("enhanceLessonOutput").classList.add("hidden");
+    document.getElementById("fullLessonOutput").classList.remove("hidden");
+    document.getElementById("lessonFunction").textContent = selectedFunction;
+    document.getElementById("lessonTargets").textContent = selected.map(t=>t.name).join(", ");
+    document.getElementById("fullLessonPlan").innerHTML = buildFullLesson(selected, selectedFunction, studentTask);
+  }
+
+  go(5);
+}
+
+function normalizeFunction(fn){
+  const map={
+    "Explain Cause & Effect":"explain",
+    "Retell / Narrate":"retell or narrate",
+    "Draw Conclusions":"draw conclusions about",
+    "Express and Support an Opinion":"express and support an opinion about",
+    "Argue / Persuade":"argue or persuade about",
+    "Ask Informational Questions":"ask informational questions about",
+    "Ask Clarifying Questions":"ask clarifying questions about"
+  };
+  return map[fn]||fn.toLowerCase();
+}
+
+
+
+function selectPlanningMode(mode){
+  document.getElementById("planningMode").value = mode;
+  document.getElementById("choiceEnhance").classList.toggle("selected", mode==="enhance");
+  document.getElementById("choiceBuild").classList.toggle("selected", mode==="build");
+}
+
+function buildFullLesson(targets, fn, task){
+  const names = targets.map(t=>t.name);
+  const targetText = names.join(" and ");
+  const primary = names[0] || "selected language target";
+  const secondary = names[1] || null;
+
+  let launch = `Activate background knowledge and make the lesson purpose clear. Introduce the content goal, then briefly preview the language students will need to communicate their thinking.`;
+  let explicit = `Use the exemplar response to explicitly teach <b>${primary.toLowerCase()}</b>${secondary?` and <b>${secondary.toLowerCase()}</b>`:""}. Highlight the exact words or structures and explain how they help communicate meaning.`;
+  let model = `Think aloud through one strong response. Show how the content idea and the language target work together. Keep the model short enough that students can imitate the structure without copying the content.`;
+  let guided = `Co-construct one response with the class. Prompt students to supply the target language, then revise the response together for clarity and precision.`;
+  let interaction = `Give students structured partner practice before independent work. Each student should produce the target language, not just listen. Use proficiency-appropriate frames and word banks as needed.`;
+  let application = `Students apply the same language target to a new example, text, problem, source, or prompt connected to the lesson content.`;
+  let assess = `Use a brief oral or written response as the formative check. Look specifically for accurate, meaningful use of ${targetText.toLowerCase()} and the expected amount of connected language for each proficiency level.`;
+
+  if(fn === "Sequence"){
+    launch = `Preview the process, routine, event chain, or steps students will study. Ask what helps a listener follow something in order.`;
+    explicit = `Teach the selected time-order language in context. Contrast simple sequencing words with more precise alternatives when appropriate.`;
+    model = `Model the sequence while pointing to visuals, steps, or events. Think aloud about why each transition fits that point in the sequence.`;
+    guided = `Give students mixed-up steps/events and co-construct the correct sequence using the target language.`;
+    interaction = `Partners orally sequence the process before writing or retelling it independently.`;
+  } else if(fn === "Compare" || fn === "Contrast"){
+    launch = `Display the two ideas, texts, representations, or examples students will compare. Ask what they notice is the same or different.`;
+    explicit = `Teach one or two comparison/contrast structures from the exemplar. Show how the structure changes the relationship between the two ideas.`;
+    model = `Model one complete comparison, then one contrast. Highlight the linking language and the evidence being compared.`;
+    guided = `Build a shared comparison using a side-by-side organizer and co-construct one sentence together.`;
+    interaction = `Partners rehearse one similarity and one difference before the independent task.`;
+  } else if(fn === "Explain Cause & Effect"){
+    launch = `Present a simple cause-and-effect example from the lesson context. Ask: What happened? Why? What happened next?`;
+    explicit = `Teach the causal language selected from the exemplar. Use arrows or a cause→effect visual to make the relationship visible.`;
+    model = `Think aloud while combining the cause and effect into a complete explanation using the target connector(s).`;
+    guided = `Co-construct a causal explanation from a second example. Ask students to choose the connector and explain why it fits.`;
+    interaction = `Partners receive or identify one cause and one effect, then orally connect them before writing.`;
+  } else if(fn === "Justify"){
+    launch = `Present a choice, answer, method, or claim from the lesson and ask students what would make a justification convincing.`;
+    explicit = `Teach the selected evidence/reasoning structure. Distinguish the answer or claim from the reason and evidence that support it.`;
+    model = `Model a short justification and label the claim, evidence, and reasoning.`;
+    guided = `Build a class justification together from shared evidence.`;
+    interaction = `Students rehearse their justification with a partner who listens specifically for the evidence/reasoning language.`;
+  } else if(fn === "Retell / Narrate"){
+    launch = `Preview the setting, events, or experience and ask students what a listener needs in order to follow the story or recount.`;
+    explicit = `Teach the selected temporal and narrative language from the exemplar.`;
+    model = `Model a concise retell that includes orientation, ordered events, and a clear ending.`;
+    guided = `Use visuals or event cards to co-construct a retell with the class.`;
+    interaction = `Partners rehearse the retell orally before students produce it independently.`;
+  } else if(fn === "Summarize"){
+    launch = `Ask students to distinguish the most important information from supporting details.`;
+    explicit = `Teach the language used to state the main idea and connect essential details.`;
+    model = `Think aloud while removing less important information and keeping the core meaning.`;
+    guided = `Create a class summary from a shared text, source, or problem explanation.`;
+    interaction = `Partners orally state the main idea and two essential details before writing.`;
+  }
+
+  return `
+    <div class="full-lesson-block">
+      <div class="phase-badge">5 min</div>
+      <h4>1. Launch & Connect</h4>
+      <p>${launch}</p>
+      <div class="small"><b>Teacher move:</b> Keep the content cognitively strong while making the language expectation visible.</div>
+    </div>
+
+    <div class="full-lesson-block">
+      <div class="phase-badge">5–8 min</div>
+      <h4>2. Explicitly Teach the Language</h4>
+      <p>${explicit}</p>
+      <div class="small"><b>Use:</b> exemplar response + highlighted target language.</div>
+    </div>
+
+    <div class="full-lesson-block">
+      <div class="phase-badge">5 min</div>
+      <h4>3. Model the Task</h4>
+      <p>${model}</p>
+      <div class="small"><b>Goal:</b> students see both the thinking and the language.</div>
+    </div>
+
+    <div class="full-lesson-block">
+      <div class="phase-badge">5–8 min</div>
+      <h4>4. Guided Practice</h4>
+      <p>${guided}</p>
+      <div class="small"><b>Teacher move:</b> gradually shift responsibility to students.</div>
+    </div>
+
+    <div class="full-lesson-block">
+      <div class="phase-badge">8–12 min</div>
+      <h4>5. Structured Interaction</h4>
+      <p>${interaction}</p>
+      <div class="small"><b>Non-negotiable:</b> every student produces the target language.</div>
+    </div>
+
+    <div class="full-lesson-block">
+      <div class="phase-badge">10–15 min</div>
+      <h4>6. Independent Application</h4>
+      <p>${application}</p>
+      <div class="small"><b>Content connection:</b> ${task}</div>
+    </div>
+
+    <div class="full-lesson-block">
+      <div class="phase-badge">3–5 min</div>
+      <h4>7. Formative Check</h4>
+      <p>${assess}</p>
+      <div class="small"><b>Next step:</b> use what you notice to decide what students need to practice next.</div>
+    </div>
+
+    <div class="full-lesson-block">
+      <div class="phase-badge">Throughout</div>
+      <h4>8. Differentiate Without Lowering Rigor</h4>
+      <p>Adjust frames, vocabulary support, modeling, oral rehearsal, and expected language complexity by proficiency level. Keep the same core content goal and language function.</p>
+      <div class="small"><b>Use the differentiated supports above</b> to decide how much language support each group needs.</div>
+    </div>
+  `;
+}
+
+function buildLessonIntegration(targets, fn){
+  const targetNames = targets.map(t=>t.name);
+  const primary = targetNames[0] || "selected language target";
+  const secondary = targetNames[1] || null;
+
+  let opening = `During the lesson launch or first encounter with the task, briefly name the language students will need. Point to the exemplar and identify <b>${primary.toLowerCase()}</b>${secondary?` and <b>${secondary.toLowerCase()}</b>`:""}.`;
+  let model = `At the first point where the existing lesson expects students to explain, discuss, read closely, or write, pause for a short think-aloud. Model one response and visibly mark the target language.`;
+  let practice = `Before students complete the independent or written task, add a 2–4 minute oral rehearsal. Students use the selected target with a partner, then revise or extend their response.`;
+  let check = `Use the existing lesson task as the formative assessment. Listen or look specifically for the selected language target(s) instead of adding a separate assignment.`;
+
+  if(fn === "Sequence"){
+    model = `At the point where students encounter steps, events, or stages, model how to organize the response using time-order language. Keep the sequence already built into the lesson.`;
+    practice = `Before writing or retelling, have students orally sequence the steps or events with a partner using the chosen transitions.`;
+  } else if(fn === "Compare" || fn === "Contrast"){
+    model = `When the lesson first places two ideas, texts, representations, or examples side by side, model one explicit comparison or contrast using the selected structure.`;
+    practice = `Have partners rehearse one similarity or difference before the existing discussion or writing task.`;
+  } else if(fn === "Explain Cause & Effect"){
+    model = `When the lesson asks students to explain a relationship, model how to connect the cause and outcome using the selected connector(s). Draw or point to the causal relationship already present in the lesson.`;
+    practice = `Insert a quick cause → effect partner rehearsal immediately before the existing explanation task.`;
+  } else if(fn === "Justify" || fn === "Argue / Persuade" || fn === "Evaluate"){
+    model = `Before the existing reasoning or evidence task, model how to connect a claim or judgment to evidence using the selected language.`;
+    practice = `Have students orally rehearse claim + evidence/reasoning before they write or share independently.`;
+  } else if(fn === "Retell / Narrate" || fn === "Summarize"){
+    model = `Before the existing retell or summary task, model how to organize only the most important ideas using the selected discourse language.`;
+    practice = `Use a brief partner rehearsal so students orally organize the response before writing.`;
+  }
+
+  return `
+    <div class="lesson-block">
+      <div class="time-badge">1–2 min</div>
+      <h4>1. Launch the Language</h4>
+      <p>${opening}</p>
+    </div>
+    <div class="lesson-block">
+      <div class="time-badge">2–4 min</div>
+      <h4>2. Model Inside the Existing Lesson</h4>
+      <p>${model}</p>
+    </div>
+    <div class="lesson-block">
+      <div class="time-badge">2–4 min</div>
+      <h4>3. Add Oral Rehearsal</h4>
+      <p>${practice}</p>
+    </div>
+    <div class="lesson-block">
+      <div class="time-badge">During existing task</div>
+      <h4>4. Formative Check</h4>
+      <p>${check}</p>
+    </div>
+  `;
+}
+
+
+
+
+
+const teacherFriendlyLanguage = {
+  "cohesive devices":{
+    label:"Words and phrases that connect ideas",
+    purpose:"Help students show how ideas relate across sentences.",
+    examples:"because, however, as a result, first, next, this, these results",
+    technical:"cohesive devices"
+  },
+  "expanded noun phrases":{
+    label:"Detailed noun groups",
+    purpose:"Add precise information about a person, place, thing, or idea.",
+    examples:"the rapidly growing plant; the two opposing forces",
+    technical:"expanded noun phrases"
+  },
+  "modal verbs":{
+    label:"Words that show possibility or certainty",
+    purpose:"Help students show how sure they are about a claim or prediction.",
+    examples:"may, might, could, must, will",
+    technical:"modal verbs"
+  },
+  "conditional clauses":{
+    label:"If/when language for conditions and results",
+    purpose:"Help students explain what happens under a particular condition.",
+    examples:"If the temperature rises, the ice melts.",
+    technical:"conditional clauses"
+  },
+  "referential cohesion":{
+    label:"Words that clearly point back to an idea",
+    purpose:"Help students connect ideas without repeating the same noun again and again.",
+    examples:"it, they, this process, these findings",
+    technical:"referential cohesion"
+  },
+  "nominalization":{
+    label:"Turning an action or idea into a noun",
+    purpose:"Helps students express complex academic ideas more concisely.",
+    examples:"decide → decision; evaporate → evaporation",
+    technical:"nominalization"
+  },
+  "comparative structures":{
+    label:"Language for showing similarities and differences",
+    purpose:"Help students explicitly compare two or more ideas.",
+    examples:"both, unlike, more than, whereas, similarly",
+    technical:"comparative structures"
+  },
+  "causal language":{
+    label:"Language that shows why something happened",
+    purpose:"Help students connect a cause to its result.",
+    examples:"because, so, therefore, as a result, leads to",
+    technical:"causal language / causal connectors"
+  },
+  "temporal language":{
+    label:"Language that shows order or time",
+    purpose:"Help students make a sequence of events or steps easy to follow.",
+    examples:"first, next, then, after, finally",
+    technical:"temporal language / temporal connectors"
+  },
+  "analytical verbs":{
+    label:"Verbs that show thinking about relationships",
+    purpose:"Help students explain what evidence or ideas show.",
+    examples:"reveals, demonstrates, suggests, indicates, contributes",
+    technical:"analytical verbs"
+  },
+  "evaluative language":{
+    label:"Language for making a judgment",
+    purpose:"Help students judge something using criteria and evidence.",
+    examples:"effective, significant, stronger, limited, more convincing",
+    technical:"evaluative language"
+  }
+};
+
+function friendlyFeatureCard(key){
+  const f = teacherFriendlyLanguage[key];
+  if(!f) return "";
+  return `<div class="friendly-feature">
+    <b>${f.label}</b>
+    <div class="small">${f.purpose}</div>
+    <div class="feature-examples"><b>Examples:</b> ${f.examples}</div>
+    <details class="tech-term"><summary>What's the technical term?</summary>${f.technical}</details>
+  </div>`;
+}
+
+function friendlyFeaturesForFunction(fn){
+  const map = {
+    "Sequence":["temporal language","cohesive devices"],
+    "Compare":["comparative structures","cohesive devices"],
+    "Contrast":["comparative structures","cohesive devices"],
+    "Explain Cause & Effect":["causal language","cohesive devices"],
+    "Justify":["causal language","cohesive devices"],
+    "Argue / Persuade":["evaluative language","cohesive devices"],
+    "Evaluate":["evaluative language","cohesive devices"],
+    "Predict":["modal verbs","conditional clauses"],
+    "Infer":["modal verbs","analytical verbs"],
+    "Analyze":["analytical verbs","cohesive devices"],
+    "Describe":["expanded noun phrases"],
+    "Summarize":["cohesive devices"],
+    "Retell / Narrate":["temporal language","referential cohesion"]
+  };
+  return (map[fn] || ["cohesive devices"]).map(friendlyFeatureCard).join("");
+}
+
+function objectiveFeatureProgression(level, fn, gradeBand, mode, targets){
+  // The teacher-selected target remains primary. The engine changes the expected
+  // realization of that target, rather than substituting scaffolds for language.
+  const selected = targets.map(t=>t.name.toLowerCase());
+  const targetPhrase = selected.length===1 ? selected[0] :
+    selected.length===2 ? `${selected[0]} and ${selected[1]}` :
+    `${selected.slice(0,-1).join(", ")}, and ${selected[selected.length-1]}`;
+
+  const levelLanguage = {
+    "Entering": {
+      discourse:"words, phrases, and emerging simple sentences",
+      sentence:"simple grammatical structures",
+      cohesion:"basic words that connect ideas"
+    },
+    "Emerging": {
+      discourse:"phrases and simple sentences with some connected ideas",
+      sentence:"simple and emerging compound structures",
+      cohesion:"common words that connect ideas and point back to earlier ideas"
+    },
+    "Developing": {
+      discourse:"connected sentences that elaborate ideas",
+      sentence:"simple, compound, and emerging complex structures",
+      cohesion:"a growing range of words and phrases that connect ideas"
+    },
+    "Expanding": {
+      discourse:"detailed connected language across multiple sentences",
+      sentence:"varied compound and complex structures",
+      cohesion:"varied words and phrases that clearly show relationships among ideas"
+    },
+    "Bridging": {
+      discourse:"sustained, precise, and cohesive language",
+      sentence:"flexible simple, compound, and complex structures",
+      cohesion:"purposeful language that connects ideas across an extended response"
+    }
+  }[level];
+
+  const functionFeatures = {
+    "Sequence":"temporal language and transitions that make order explicit",
+    "Compare":"comparative language and connectors that signal similarities",
+    "Contrast":"contrastive language and connectors that signal differences",
+    "Explain Cause & Effect":"causal language, clauses, and connectors that make relationships explicit",
+    "Justify":"claim, evidence, and reasoning language that links a position to support",
+    "Argue / Persuade":"claim, evidence, reasoning, and persuasive or qualifying language",
+    "Evaluate":"criteria-based evaluative language linked to evidence or reasoning",
+    "Summarize":"main-idea, key-detail, and cohesive summary language",
+    "Retell / Narrate":"temporal, referential, and verb-tense language that organizes events",
+    "Predict":"modal, future, and conditional language that expresses likelihood",
+    "Infer":"inference and evidence-reference language that connects clues to interpretation",
+    "Analyze":"analytical verbs and relational language that explain how ideas or parts connect",
+    "Define":"category, attribute, and relational language used to define precisely",
+    "Describe":"precise nouns, modifiers, detailed noun groups, and relational language",
+    "Classify":"category, attribute, and criteria language that explains membership"
+  }[fn] || "language structures that make the intended relationship among ideas explicit";
+
+  const modePhrase = mode === "speaking"
+    ? "in an oral response"
+    : "in a written response";
+
+  return `${targetPhrase}; ${functionFeatures}; ${levelLanguage.sentence}; and ${levelLanguage.cohesion} ${modePhrase}`;
+}
+
+function buildDifferentiatedObjective(level, fn, task, domain, targets){
+  const gradeBand = document.getElementById("gradeBand")?.value || "";
+  const mode = document.getElementById("communicationMode")?.value || domain || "writing";
+  const featureText = objectiveFeatureProgression(level, fn, gradeBand, mode, targets);
+
+  return `<div class="level-card">
+    <h4>${level}</h4>
+    <p>Students will ${normalizeFunction(fn)} ${escapeHtml(task)} using ${featureText}.</p>
+  </div>`;
+}
+
+
+function analyzeStudentTask(task){
+  const t = (task || "").toLowerCase();
+  const demands = [];
+
+  if(/compare|similar|same|both/.test(t)) demands.push("show similarities");
+  if(/contrast|difference|different|unlike/.test(t)) demands.push("show differences");
+  if(/why|cause|effect|because|impact|affect/.test(t)) demands.push("show cause-and-effect relationships");
+  if(/sequence|order|steps|process|procedure|retell|events/.test(t)) demands.push("make order or sequence clear");
+  if(/justify|defend|support|evidence|reason/.test(t)) demands.push("connect a claim or answer to evidence/reasoning");
+  if(/summarize|main idea|central idea/.test(t)) demands.push("state the main idea and connect essential details");
+  if(/describe|observe|characteristics|features/.test(t)) demands.push("describe precise characteristics or details");
+  if(/predict|likely|will happen|might happen/.test(t)) demands.push("express a prediction and degree of certainty");
+  if(/infer|inference|suggests|implies/.test(t)) demands.push("connect clues or evidence to an inference");
+  if(/analyz|relationship|pattern/.test(t)) demands.push("explain relationships or patterns");
+  if(/partner|discuss|oral|orally|tell|present|conversation/.test(t)) demands.push("produce the language orally for another person");
+  if(/write|written|paragraph|response|essay/.test(t)) demands.push("organize the language in writing");
+
+  return [...new Set(demands)];
+}
+
+function buildDemandAnalysis(fn, targets, studentTask){
+  const selected = targets.map(t=>t.name);
+  const academic = {
+    "Sequence":"organize events, steps, or stages in a meaningful order",
+    "Compare":"identify and explain meaningful similarities",
+    "Contrast":"identify and explain meaningful differences",
+    "Explain Cause & Effect":"explain why something happens and what results",
+    "Justify":"support a claim, choice, answer, or interpretation with reasoning/evidence",
+    "Argue / Persuade":"develop and support a position for an audience",
+    "Evaluate":"make a judgment using criteria and evidence",
+    "Summarize":"identify and communicate the most important ideas and details",
+    "Retell / Narrate":"recount events or experiences coherently",
+    "Predict":"state a likely outcome and connect it to evidence or reasoning",
+    "Infer":"derive an interpretation from evidence or clues",
+    "Analyze":"explain relationships among ideas, parts, evidence, or events",
+    "Define":"state what something is and distinguish its essential attributes",
+    "Describe":"represent characteristics, qualities, relationships, or details precisely",
+    "Classify":"group information according to relevant attributes or criteria"
+  }[fn] || `use language to ${normalizeFunction(fn)}`;
+
+  const taskDemands = analyzeStudentTask(studentTask);
+  const taskNote = taskDemands.length
+    ? `<br><br><b>Because of the student task, also look for language that helps students:</b> ${taskDemands.join("; ")}.`
+    : "";
+
+  const linguistic = selected.length
+    ? `Students need language that accomplishes <b>${fn}</b>, especially <b>${selected.join("</b> and <b>")}</b>. The exemplar should show these features doing real meaning-making work; the teacher then confirms which feature(s) are high-leverage enough for explicit instruction.${taskNote}`
+    : `Students need language that accomplishes <b>${fn}</b>. Use the exemplar to identify the words, phrases, and structures that are essential enough to teach explicitly.${taskNote}`;
+
+  return {academic, linguistic};
+}
+
+function levelCard(level,targets){
+  const support={
+    "Entering":"Use visuals, gestures, a small word bank, and a highly complete frame. Allow pointing, labeling, and short oral responses before a full sentence.",
+    "Emerging":"Use a short frame that preserves the key relationship, plus a visual or organized word bank and partner rehearsal.",
+    "Developing":"Use partially open frames, sentence combining, and a transition bank. Expect connected sentences with increasing detail.",
+    "Expanding":"Use open prompts and language criteria rather than fixed frames. Expect detailed connected language and flexible target use.",
+    "Bridging":"Use authentic task prompts and success criteria. Expect precise, audience-aware language with minimal support."
+  };
+  const frame=sampleFrame(level,targets);
+  return `<div class="level-card"><h4>${level}</h4><p><b>Suggested support:</b> ${support[level]}</p><p><b>Possible frame/prompt:</b> <i>${frame}</i></p></div>`;
+}
+
+function sampleFrame(level,targets){
+  const names=targets.map(t=>t.name);
+  if(names.includes("Cause-and-effect connectors")){
+    return {
+      "Entering":"___ because ___.",
+      "Emerging":"The ___ changed because ___.",
+      "Developing":"___ happened because ___. As a result, ___.",
+      "Expanding":"Explain the causal chain using more than one connector.",
+      "Bridging":"Explain the relationship independently using precise causal language."
+    }[level];
+  }
+  if(names.includes("Time-order transitions")){
+    return {
+      "Entering":"First ___. Then ___.",
+      "Emerging":"First ___, next ___, and finally ___.",
+      "Developing":"Sequence the process using varied time-order language.",
+      "Expanding":"Explain the sequence with cohesive transitions and precise action verbs.",
+      "Bridging":"Organize the sequence independently for the intended audience."
+    }[level];
+  }
+  if(names.includes("Comparison structures")){
+    return {
+      "Entering":"___ and ___ are the same/different.",
+      "Emerging":"Both ___ and ___ ___. However, ___.",
+      "Developing":"___ is similar to ___ because ___. In contrast, ___.",
+      "Expanding":"Compare the two using varied structures and precise evidence.",
+      "Bridging":"Construct an independent, nuanced comparison."
+    }[level];
+  }
+  return {
+    "Entering":"Use words, phrases, visuals, and a highly complete frame.",
+    "Emerging":"Use a short sentence frame with meaningful choices.",
+    "Developing":"Use connected sentences with partial support.",
+    "Expanding":"Respond with detailed connected language and minimal scaffolds.",
+    "Bridging":"Respond independently using precise language for purpose and audience."
+  }[level];
+}
+
+function openCard(encodedName,encodedEvidence){
+  const name=decodeURIComponent(encodedName);
+  const evidence=decodeURIComponent(encodedEvidence);
+  const info=targetInfo[name]||{
+    why:"This language contributes meaning in the exemplar.",
+    teach:"Model it explicitly in context and provide guided practice.",
+    errors:["Students may use the form without communicating the intended meaning."]
+  };
+  document.getElementById("drawerLabel").textContent="Instructional Language Target";
+  document.getElementById("drawerTitle").textContent=name;
+  document.getElementById("drawerEvidence").textContent=`Identified in the exemplar: “${evidence}.”`;
+  document.getElementById("drawerBody").innerHTML=`
+    <div class="drawer-grid">
+      <div class="info-card"><h4>Why this matters</h4><p>${info.why}</p></div>
+      <div class="info-card"><h4>Teach It</h4><p>${info.teach}</p></div>
+      <div class="info-card"><h4>Common errors</h4><ul>${info.errors.map(e=>`<li>${e}</li>`).join("")}</ul></div>
+      <div class="info-card"><h4>Teacher decision</h4><p>Include this as an instructional target only if it is central to the lesson and worth explicit teaching today.</p></div>
+    </div>`;
+  document.getElementById("drawer").classList.add("open");
+  document.getElementById("backdrop").classList.add("open");
+}
+
+function closeCard(){
+  document.getElementById("drawer").classList.remove("open");
+  document.getElementById("backdrop").classList.remove("open");
+}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeCard()});
+
+function copyObjective(){
+  const text=document.getElementById("objective").textContent;
+  navigator.clipboard.writeText(text).then(()=>alert("Objective copied.")).catch(()=>alert("Select and copy the objective manually."));
+}
+</script>
+</body>
+</html>
