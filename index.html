@@ -275,6 +275,7 @@ th{background:#f7f9fc}
 
     <div class="integration-note">
       <b>How are you planning today?</b>
+      <div class="small" style="margin-top:5px">Choose one path before building the final plan.</div>
       <div class="planning-choice">
         <div class="choice-card selected" id="choiceEnhance" onclick="selectPlanningMode('enhance')">
           <h4>Enhance My Existing Lesson</h4>
@@ -939,6 +940,7 @@ function buildPlan(){
 
   const selected=checked.map(x=>availableTargets[+x.value]);
   const task=document.getElementById("task").value.trim().replace(/[.]+$/,"");
+  const studentTask=(document.getElementById("studentTask")?.value.trim() || task).replace(/[.]+$/,"");
   const domain=document.getElementById("domain").value;
   const targetNames=selected.map(x=>x.name.toLowerCase());
   const targetText=targetNames.length===1?targetNames[0]:targetNames.slice(0,-1).join(", ")+" and "+targetNames.at(-1);
